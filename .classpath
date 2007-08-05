@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.equinox.common_3.3.0.v20070426.jar"/>
+	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.jface_3.3.0.I20070606-0010.jar"/>
+	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.core.commands_3.3.0.I20070605-0010.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/liesen"/>
+	<classpathentry kind="lib" path="C:/java/lib/jaudiotaggerv1.0.5/dist/jaudiotagger.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
