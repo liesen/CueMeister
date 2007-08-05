@@ -48,7 +48,7 @@ public class RiffFile extends RiffChunk {
         chunk.setData(data);
 
         // Squash pad byte
-        if (len % 2 == 1) {
+        if ((len & 1) == 1) {
             len += len % 2;
             buffer.get();
         }

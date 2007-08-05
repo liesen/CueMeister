@@ -115,6 +115,8 @@ public class CueSheet extends CueItem {
             }
         }
         
+        reader.close();
+        
         return cueSheet;
     }
 

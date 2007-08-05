@@ -41,12 +41,14 @@ public class MxmReader {
         Chunk plot = null;
         
         for (Chunk p : ((ChunkContainer) riff).getChunks()) {
-            if ("plot".equals(p.getIdentifier())) {
+            if ("plot".equalsIgnoreCase(p.getIdentifier())) {
                 plot = p;
                 
                 break;
             }
         }
+        
+        System.out.println(plot);
         
         display(riff);
         /*

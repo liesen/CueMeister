@@ -1,9 +1,12 @@
 package cue;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
 
-public class TrackIndexComparator implements Comparator<Track> {
+public class TrackIndexComparator implements Comparator<Track>, Serializable {
+    /** */
+    private static final long serialVersionUID = -206931938413172940L;
 
     @Override
     public int compare(Track o1, Track o2) {

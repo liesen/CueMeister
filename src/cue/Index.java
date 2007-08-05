@@ -69,6 +69,16 @@ public class Index implements Comparable<Index> {
     public String toString() {
         return String.format("%02d:%02d:%02d", minutes, seconds, frames);
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Index) && compareTo((Index) o) == 0;
+    }
+    
+    @Override
+    public int hashCode() {
+        return FRAMES_PER_SECOND * (minutes * 60 + seconds) + frames;
+    }
 
     @Override
     public int compareTo(Index o) {
