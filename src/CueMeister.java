@@ -11,7 +11,9 @@ import mixmeister.mmp.MixmeisterPlaylist;
 import mixmeister.mmp.TrackMeta;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLayoutData;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -22,16 +24,20 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.Text;
 import org.jaudiotagger.audio.InvalidAudioFrameException;
 import org.jaudiotagger.audio.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3File;
@@ -48,27 +54,155 @@ import cue.Mode;
 import cue.Track;
 
 public class CueMeister extends ApplicationWindow {
+    public static String DEFAULT_PERFORMER = "CueMeister";
+
+    public static String DEFAULT_TITLE = "In the mix";
+
     private CueSheet cueSheet;
 
     private MixmeisterPlaylist mmp;
 
     private TableViewer tableViewer;
 
+    private Text title;
+
+    private Text performer;
+
+    private Text file;
+
     public CueMeister() {
-        super(new Shell());
+        super(null);
+
+        addMenuBar();
 
         cueSheet = new CueSheet("", "");
     }
 
-    private static MixmeisterPlaylist loadMixmeisterPlaylist(File f)
-            throws FileNotFoundException, IOException {
-        MixmeisterPlaylist mmp = MixmeisterPlaylist.open(f);
-        return mmp;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+     */
+    @Override
+    protected void configureShell(Shell sh) {
+        super.configureShell(sh);
+
+        sh.setText("CueMeister");
     }
 
+    /* (non-Javadoc)
+     * @see org.eclipse.jface.window.Window#initializeBounds()
+     */
+    @Override
+    protected void initializeBounds() {
+        getShell().setSize(540, 480);
+    }
+
+    @Override
+    protected MenuManager createMenuManager() {
+        MenuManager menu = new MenuManager();
+
+        menu.add(createLoadAction());
+        menu.add(createSaveAction());
+        menu.add(createAboutAction());
+
+        return menu;
+    }
+
+    /**
+     * @return
+     */
+    private Action createLoadAction() {
+        return new Action("Load") {
+            @Override
+            public void run() {
+                super.run();
+    
+                FileDialog dialog = new FileDialog(getShell());
+                dialog.setFilterExtensions(new String[] { "*.mmp" });
+    
+                try {
+                    final String path = dialog.open();
+    
+                    if (path == null) {
+                        return;
+                    }
+    
+                    File file = new File(path);
+    
+                    try {
+                        mmp = MixmeisterPlaylist.open(file);
+                        cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, true);
+                        tableViewer.setInput(cueSheet);
+                    } catch (RiffException e) {
+                        e.printStackTrace();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } catch (SWTException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+    }
+
+
+    /**
+     * @return
+     */
+    private Action createAboutAction() {
+        return new Action("About") {
+            @Override
+            public void run() {
+                super.run();
+    
+                MessageDialog
+                        .openInformation(
+                                getShell(),
+                                "About CueMeister",
+                                "CueMeister converts Mixmeister playlists to cue sheets\n"
+                                        + "\n"
+                                        + "Author: Johan Liesén, johanliesen@gmail.com, "
+                                        + "http://www.itstud.chalmers.se/~liesen/");
+            }
+        };
+    }
+
+    /**
+     * @return
+     */
+    private Action createSaveAction() {
+        return new Action("Save") {
+            @Override
+            public void run() {
+                super.run();
+
+                final String path = new FileDialog(getShell()).open();
+
+                try {
+                    CueSheet cue = gatherCueSheet();
+                    new CueSheetWriter(new FileWriter(path)).write(cue);
+                } catch (IOException e) {
+                    MessageDialog.openError(getShell(), "Write error",
+                            "Could not write to file");
+                }
+
+            }
+        };
+    }
+
+    /**
+     * Converts MMP to CUE
+     * 
+     * @param mmp
+     * @param readID3 use ID3 lookup
+     * @return
+     */
     private static CueSheet getCueSheetFromMixmeisterPlaylist(
             MixmeisterPlaylist mmp, boolean readID3) {
-        CueSheet cueSheet = new CueSheet("CueMeister", "In the Mix");
+        CueSheet cueSheet = new CueSheet("", "");
         double position = 0;
         String performer, songTitle;
 
@@ -139,6 +273,8 @@ public class CueMeister extends ApplicationWindow {
     }
 
     /**
+     * Returns the first value (body) found in a ID3v2 tag
+     * 
      * @param tag
      * @param identifiers
      * @return
@@ -162,64 +298,10 @@ public class CueMeister extends ApplicationWindow {
 
         return null;
     }
-
-    private Action createLoadAction() {
-        return new Action("Load") {
-            @Override
-            public void run() {
-                super.run();
-
-                FileDialog dialog = new FileDialog(getParentShell());
-
-                dialog.setFilterExtensions(new String[] { "*.mmp" });
-
-                try {
-                    final String path = dialog.open();
-                    
-                    if (path == null) {
-                        return;
-                    }
-                    
-                    File file = new File(path);
-
-                    try {
-                        setMixmeisterPlaylist(MixmeisterPlaylist.open(file));
-                        
-                        tableViewer.setInput(getCueSheetFromMixmeisterPlaylist(mmp, true));
-                    } catch (RiffException e) {
-                        e.printStackTrace();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } catch (SWTException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-     */
-    @Override
-    protected void configureShell(Shell sh) {
-        super.configureShell(sh);
-
-        sh.setLayout(new GridLayout());
-        sh.setText("CueMeister");
-        sh.setSize(640, 480);
-    }
-
+    
     private TableViewer createTableViewer(Composite parent, int nColumns) {
         Table table = new Table(parent, SWT.V_SCROLL | SWT.BORDER
                 | SWT.HIDE_SELECTION);
-        table.setLinesVisible(true);
-
-        TableViewer tableViewer = new TableViewer(table);
 
         GridData tableData = new GridData();
 
@@ -229,26 +311,25 @@ public class CueMeister extends ApplicationWindow {
 
         tableData.verticalAlignment = GridData.CENTER;
         tableData.grabExcessVerticalSpace = true;
-        
-        table.setLayoutData(tableData);
 
-        return tableViewer;
+        return new TableViewer(table);
     }
 
     @Override
-    protected Control createContents(Composite comp) {
+    protected Control createContents(Composite parent) {
         if (mmp != null) {
             cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, true);
         }
-        
-        createToolbar(comp);
-        
-        String[] columnHeaders = new String[] { "Performer", "Title", "Index" };
 
+        Composite comp = new Composite(parent, SWT.NONE);
+        GridLayoutFactory.swtDefaults().applyTo(comp);
+
+        createForm(comp);
+
+        String[] columnHeaders = new String[] { "Performer", "Title", "Index" };
         ColumnLayoutData[] columnLayouts = new ColumnLayoutData[] {
                 new ColumnWeightData(3, true), new ColumnWeightData(4, true),
                 new ColumnWeightData(1, true) };
-
         CellLabelProvider[] labelProviders = new CellLabelProvider[] {
         // Performer column
                 new CellLabelProvider() {
@@ -281,6 +362,7 @@ public class CueMeister extends ApplicationWindow {
                 } };
 
         tableViewer = createTableViewer(comp, 3);
+
         Table table = tableViewer.getTable();
         TableLayout tableLayout = new TableLayout();
 
@@ -299,21 +381,81 @@ public class CueMeister extends ApplicationWindow {
 
         table.setLayout(tableLayout);
         table.setHeaderVisible(true);
+        table.setLinesVisible(true);
+        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
         tableViewer.setUseHashlookup(true);
         tableViewer.setContentProvider(new CueSheetContentProvider());
         // tableView.setLabelProvider(new CueSheetLabelProvider());
         tableViewer.setInput(cueSheet);
 
-        return table;
+        return comp;
     }
 
-    private void createToolbar(final Composite parent) {
-        ToolBar toolBar = new ToolBar(parent, SWT.RIGHT | SWT.FLAT);
-        ToolBarManager manager = new ToolBarManager(toolBar);
-        
-        manager.add(createLoadAction());
-        manager.update(true);
+    protected void createForm(final Composite parent) {
+        // Composite comp = new Composite(parent, SWT.NONE);
+        Group comp = new Group(parent, SWT.NONE);
+        comp.setText("Cue sheet information");
+
+        GridLayoutFactory.swtDefaults().numColumns(2).applyTo(comp);
+        comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+        new Label(comp, SWT.NONE).setText("Performer");
+
+        performer = new Text(comp, SWT.BORDER);
+        performer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+        performer.setText(DEFAULT_PERFORMER);
+
+        new Label(comp, SWT.NONE).setText("Title");
+
+        title = new Text(comp, SWT.BORDER);
+        title.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+        title.setText(DEFAULT_TITLE);
+
+        new Label(comp, SWT.NONE).setText("File");
+
+        Composite fileComposite = new Composite(comp, SWT.NONE);
+        GridLayoutFactory.fillDefaults().numColumns(2).applyTo(fileComposite);
+        fileComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
+                false));
+
+        file = new Text(fileComposite, SWT.BORDER);
+        file.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+        Button browseButton = new Button(fileComposite, SWT.PUSH);
+        browseButton.setText("Browse...");
+        browseButton.setLayoutData(new GridData(SWT.RIGHT));
+        browseButton.addSelectionListener(new SelectionListener() {
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                final String path = new FileDialog(parent.getShell()).open();
+
+                if (path != null) {
+                    file.setText(path);
+                }
+            }
+
+        });
+    }
+
+    protected CueSheet gatherCueSheet() {
+        CueSheet cue = getCueSheetFromMixmeisterPlaylist(mmp, true); // new CueSheet(performer.getText(), title.getText());
+
+        cue.setPerformer(performer.getText());
+        cue.setTitle(title.getText());
+
+        if (file.getText() != null && !file.getText().isEmpty()) {
+            cue.setFile(new cue.File(file.getText()));
+        }
+
+        return cue;
     }
 
     /**
@@ -361,13 +503,17 @@ public class CueMeister extends ApplicationWindow {
 
         if (mmpFile != null) {
             try {
-                MixmeisterPlaylist mmp = loadMixmeisterPlaylist(new File(
+                MixmeisterPlaylist mmp = MixmeisterPlaylist.open(new File(
                         mmpFile));
-                
+
                 if (outFile == null) {
-                    new CueSheetWriter(new PrintWriter(System.out)).write(getCueSheetFromMixmeisterPlaylist(mmp, readID3));
+                    new CueSheetWriter(new PrintWriter(System.out))
+                            .write(getCueSheetFromMixmeisterPlaylist(mmp,
+                                    readID3));
                 } else {
-                    new CueSheetWriter(new FileWriter(outFile)).write(getCueSheetFromMixmeisterPlaylist(mmp, readID3));
+                    new CueSheetWriter(new FileWriter(outFile))
+                            .write(getCueSheetFromMixmeisterPlaylist(mmp,
+                                    readID3));
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -377,10 +523,5 @@ public class CueMeister extends ApplicationWindow {
         } else {
             new CueMeister().run();
         }
-    }
-
-    private void setMixmeisterPlaylist(MixmeisterPlaylist mmp)
-            throws RiffException {
-        this.mmp = mmp;
     }
 }
