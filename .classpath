@@ -8,6 +8,5 @@
 	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.core.commands_3.3.0.I20070605-0010.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/liesen"/>
 	<classpathentry kind="lib" path="C:/java/lib/jaudiotaggerv1.0.5/dist/jaudiotagger.jar"/>
-	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.ui.forms_3.3.0.v20070511.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
