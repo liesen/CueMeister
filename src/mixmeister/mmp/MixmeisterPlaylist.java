@@ -20,7 +20,17 @@ import riff.RiffFile;
  * @author johan
  */
 public class MixmeisterPlaylist {
+    // MixMeister versions
+    public static final int VERSION_UNKNOWN = 0;
+    public static final int VERSION_6 = 48;
+    public static final int VERSION_7 = 56;
+    public static final int VERSION_FUSION = VERSION_7;
+    
+    /** Tracks */
     private List<Track> tracks;
+    
+    /** Playlist version */
+    private int version = VERSION_UNKNOWN;
 
     /**
      * Creates an empty playlist
@@ -46,18 +56,18 @@ public class MixmeisterPlaylist {
 
         mmp.getTracks().addAll(
                 readTrackList((ChunkContainer) riff.getChunks().get(0)));
-
+        
         return mmp;
     }
 
     private static List<Track> readTrackList(ChunkContainer trkl) {
         List<Track> tracks = new ArrayList<Track>();
-        TrackMeta trks = null;
+        Marker trks = null;
 
         for (Chunk chunk : trkl.getChunks()) {
             TrackHeader header = new TrackHeader();
             String file = "";
-            List<TrackMeta> meta = new LinkedList<TrackMeta>();
+            List<Marker> meta = new LinkedList<Marker>();
 
             if (chunk.canContainSubchunks()) {
                 for (Chunk chunk2 : ((ChunkContainer) chunk).getChunks()) {
@@ -73,7 +83,7 @@ public class MixmeisterPlaylist {
                                     meta.add(readTrackMarker(chunk3));
                                 } else if ("TRKS"
                                         .equals(chunk3.getIdentifier())) {
-                                    trks = readTrackStartMarker(chunk3);
+                                    trks = readTrackMarker(chunk3);
                                 }
                             }
                         }
@@ -90,20 +100,9 @@ public class MixmeisterPlaylist {
         return tracks;
     }
 
-    private static TrackMeta readTrackStartMarker(Chunk trks) {
-        int[] data = wrapChunk(trks);
-
-        int type = data[1];
-        int position = data[2];
-        int changeFlag = data[3];
-        int value = data[4];
-
-        return new TrackMeta(type, position, changeFlag, value);
-    }
-
     private static TrackHeader readTrackHeader(Chunk trkh) {
         int[] data = wrapChunk(trkh);
-
+        
         String archiveKey = String.format("%08x-%08x-%08x-%08x", data[3],
                 data[2], data[5], data[4]);
         double bpm = data[6] / 1000.0;
@@ -142,29 +141,47 @@ public class MixmeisterPlaylist {
 
         buf.get(data);
 
-        return data;
-    }
-
-    private static TrackMeta readTrackMarker(Chunk trkm) {
-        int[] data = wrapChunk(trkm);
-
-        /* System.out.print(trkm.getIdentifier() + ":");
+        System.out.print(ch.getIdentifier() + ":");
         
         for (int i = 0; i < data.length; ++i) {
             System.out.printf("%12d", data[i]);
         }
         
-        System.out.println(); */
+        System.out.println();
+
+        return data;
+    }
+
+    private static Marker readTrackMarker(Chunk trkm) {
+        int[] data = wrapChunk(trkm);
 
         int type = data[1];
         int position = data[2];
         int changeFlag = data[3];
-        int value = data[5];
+        int value = data[4];
+        int volume = data[5];
 
-        return new TrackMeta(type, position, changeFlag, value);
+        return new Marker(type, position, changeFlag, value, volume, data[6], data[7]);
     }
 
+    /**
+     * @return
+     */
     public List<Track> getTracks() {
         return tracks;
+    }
+
+    /**
+     * @return the version
+     */
+    public int getVersion() {
+        return version;
+    }
+
+    /**
+     * @param version the version to set
+     */
+    public void setVersion(int version) {
+        this.version = version;
     }
 }

@@ -3,6 +3,7 @@ package mixmeister.mmp;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -20,9 +21,9 @@ public class Track {
     private String fileName; // TRKF
 
     /** Meta data */
-    private Map<Integer, Set<TrackMeta>> metaData; // TKLY
+    private Map<Integer, Set<Marker>> metaData; // TKLY
 
-    private TrackMeta stop;
+    private Marker stop;
 
     /**
      * 
@@ -31,7 +32,7 @@ public class Track {
      * @param fileName
      */
     public Track(TrackHeader header, String fileName) {
-        this(header, fileName, new LinkedList<TrackMeta>());
+        this(header, fileName, new LinkedList<Marker>());
     }
 
     /**
@@ -39,23 +40,23 @@ public class Track {
      * 
      * @param header
      * @param fileName
-     * @param metaData
+     * @param meta2
      */
     public Track(TrackHeader header, String fileName,
-            Collection<TrackMeta> metaData) {
+            List<Marker> meta2) {
         this.header = header;
         this.fileName = fileName;
-        this.metaData = new HashMap<Integer, Set<TrackMeta>>();
+        this.metaData = new HashMap<Integer, Set<Marker>>();
 
-        for (TrackMeta meta : metaData) {
-            addMetaData(meta);
+        for (Marker meta : meta2) {
+            addMarker(meta);
         }
     }
 
     /**
      * @return track's meta data
      */
-    public Collection<Set<TrackMeta>> getMetaData() {
+    public Collection<Set<Marker>> getMetaData() {
         return metaData.values();
     }
 
@@ -63,20 +64,20 @@ public class Track {
      * @param type
      * @return markers of given type if any; null otherwise
      */
-    public Set<TrackMeta> getMarkers(int type) {
+    public Set<Marker> getMarkers(int type) {
         return metaData.get(type);
     }
 
     /**
      * @param metaData
      */
-    public void addMetaData(TrackMeta metaData) {
-        Set<TrackMeta> metaSet;
+    public void addMarker(Marker metaData) {
+        Set<Marker> metaSet;
 
         if (this.metaData.containsKey(metaData.getType())) {
             metaSet = this.metaData.get(metaData.getType());
         } else {
-            metaSet = new TreeSet<TrackMeta>(new MarkerPositionComparator());
+            metaSet = new TreeSet<Marker>(new MarkerPositionComparator());
 
             this.metaData.put(metaData.getType(), metaSet);
         }
@@ -84,11 +85,11 @@ public class Track {
         metaSet.add(metaData);
     }
 
-    public void setStopMarker(TrackMeta trks) {
+    public void setStopMarker(Marker trks) {
         stop = trks;
     }
 
-    public TrackMeta getStopMarker() {
+    public Marker getStopMarker() {
         return stop;
     }
 

@@ -1,14 +1,14 @@
 #Fat Jar Configuration File
-#Wed Aug 01 01:39:47 CEST 2007
+#Tue Aug 07 15:52:30 CEST 2007
 onejar.license.required=false
 manifest.classpath=
 manifest.removesigners=true
 onejar.checkbox=true
 jarname=CueMeister.jar
 manifest.mergeall=true
-manifest.mainclass=CueShell
+manifest.mainclass=CueMeister
 manifest.file=<createnew>
 jarname.isextern=false
 onejar.expand=
-excludes=<po|org.eclipse.swt>;<po|liesen>;<jar|org.eclipse.equinox.common_3.3.0.v20070426.jar>;<jar|org.eclipse.jface_3.3.0.I20070606-0010.jar>;<jar|org.eclipse.core.commands_3.3.0.I20070605-0010.jar>;<jar|swt.jar>
+excludes=<po|liesen>;<jar|org.eclipse.ui.forms_3.3.0.v20070511.jar>
 includes=

@@ -7,8 +7,9 @@ import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import mixmeister.mmp.Marker;
 import mixmeister.mmp.MixmeisterPlaylist;
-import mixmeister.mmp.TrackMeta;
+import mixmeister.mmp.TrackType;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
@@ -50,13 +51,12 @@ import riff.RiffException;
 import cue.CueSheet;
 import cue.CueSheetWriter;
 import cue.Index;
-import cue.Mode;
 import cue.Track;
 
 public class CueMeister extends ApplicationWindow {
-    public static String DEFAULT_PERFORMER = "CueMeister";
+    public static final String DEFAULT_PERFORMER = "CueMeister";
 
-    public static String DEFAULT_TITLE = "In the mix";
+    public static final String DEFAULT_TITLE = "In the mix";
 
     private CueSheet cueSheet;
 
@@ -205,68 +205,81 @@ public class CueMeister extends ApplicationWindow {
         CueSheet cueSheet = new CueSheet("", "");
         double position = 0;
         String performer, songTitle;
+        mixmeister.mmp.Track mmpTrack;
 
         for (int i = 0; i < mmp.getTracks().size(); ++i) {
-            Track track = new Track(i + 1, Mode.AUDIO);
+            mmpTrack = mmp.getTracks().get(i);
 
-            // Default performer and title
-            performer = "Unknown artist";
-            songTitle = "Track " + track.getNumber();
+            switch (mmpTrack.getHeader().getTrackType()) {
+            case TrackType.OVERLAY:
+            case TrackType.OVERLAY_WITH_BEATSYNC:
+            case TrackType.OVERLAY_WITHOUT_BEATSYNC:
+                break;
 
-            String fileName = mmp.getTracks().get(i).getFileName();
+            default:
+                cue.Track cueTrack = new cue.Track(i + 1);
 
-            // Fetch ID3
-            if (readID3) {
-                try {
-                    MP3File mp3 = new MP3File(new File(fileName),
-                            MP3File.LOAD_ALL, true);
+                performer = "Unknown artist";
+                songTitle = "Track " + cueTrack.getNumber();
+                
+                String fileName = mmpTrack.getFileName();
 
-                    if (mp3.hasID3v1Tag()) {
-                        ID3v1Tag tag = mp3.getID3v1Tag();
+                // Fetch ID3
+                if (readID3) {
+                    try {
+                        MP3File mp3 = new MP3File(new File(fileName),
+                                MP3File.LOAD_ALL, true);
 
-                        performer = tag.getArtist();
-                        songTitle = tag.getTitle();
-                    }
+                        if (mp3.hasID3v1Tag()) {
+                            ID3v1Tag tag = mp3.getID3v1Tag();
 
-                    // Try v2
-                    if (mp3.hasID3v2Tag()) {
-                        AbstractID3v2Tag tag = mp3.getID3v2TagAsv24();
-
-                        // Get performer
-                        String value = extractID3v2TagValue(tag, "TCOM",
-                                "TPE1", "TOPE", "TEXT", "TOLY");
-
-                        if (value != null) {
-                            performer = value;
+                            performer = tag.getArtist();
+                            songTitle = tag.getTitle();
                         }
 
-                        // Get song title
-                        value = extractID3v2TagValue(tag, "TIT2", "TOAL");
+                        // Try preferred ID3v2
+                        if (mp3.hasID3v2Tag()) {
+                            AbstractID3v2Tag tag = mp3.getID3v2TagAsv24();
 
-                        if (value != null) {
-                            songTitle = value;
+                            // Get performer
+                            String value = extractID3v2TagValue(tag, "TCOM",
+                                    "TPE1", "TOPE", "TEXT", "TOLY");
+
+                            if (value != null) {
+                                performer = value;
+                            }
+
+                            // Get song title
+                            value = extractID3v2TagValue(tag, "TIT2", "TOAL");
+
+                            if (value != null) {
+                                songTitle = value;
+                            }
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (TagException e) {
+                        e.printStackTrace();
+                    } catch (ReadOnlyFileException e) {
+                        e.printStackTrace();
+                    } catch (InvalidAudioFrameException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (TagException e) {
-                    e.printStackTrace();
-                } catch (ReadOnlyFileException e) {
-                    e.printStackTrace();
-                } catch (InvalidAudioFrameException e) {
-                    e.printStackTrace();
                 }
+
+                cueTrack.setPerformer(performer);
+                cueTrack.setTitle(songTitle);
+                cueTrack.getIndices().add(new Index(position));
+
+                cueSheet.getTracks().add(cueTrack);
+
+                // Get last outro marker
+                Marker outroAnchor = new LinkedList<Marker>(mmp.getTracks()
+                        .get(i).getMarkers(Marker.OUTRO_RANGE)).getLast();
+
+                position += outroAnchor.getPosition() / 1000000.0;
+                break;
             }
-
-            track.setPerformer(performer);
-            track.setTitle(songTitle);
-            track.getIndices().add(new Index(position));
-
-            cueSheet.getTracks().add(track);
-
-            TrackMeta outroAnchor = new LinkedList<TrackMeta>(mmp.getTracks()
-                    .get(i).getMarkers(TrackMeta.OUTRO_RANGE)).getLast();
-            position += outroAnchor.getPosition() / 1000000.0;
         }
 
         return cueSheet;

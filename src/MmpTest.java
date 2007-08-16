@@ -2,10 +2,19 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.TreeSet;
 
+import org.apache.commons.math.stat.regression.SimpleRegression;
+
+import mixmeister.mmp.MarkerPositionComparator;
+import mixmeister.mmp.MixingType;
 import mixmeister.mmp.MixmeisterPlaylist;
-import mixmeister.mmp.TrackMeta;
+import mixmeister.mmp.Track;
+import mixmeister.mmp.Marker;
+import mixmeister.mmp.TrackType;
 import cue.CueSheet;
 import cue.CueSheetWriter;
 import cue.Index;
@@ -19,63 +28,49 @@ public class MmpTest {
     public static void main(String... args) throws FileNotFoundException,
             IOException {
         File file = new File(
-                "C:\\Documents and Settings\\johan\\Desktop\\mini\\do it again_star guitar_neo violence_25 years and running_toop toop.mmp");
+        // "C:\\Documents and Settings\\johan\\Desktop\\mini\\do it again_star guitar_neo violence_25 years and running_toop toop.mmp");
+                "7.mmp");
         MixmeisterPlaylist mmp = MixmeisterPlaylist.open(file);
 
         CueSheet cueSheet = new CueSheet("VA", "Test");
         cueSheet.setFile(new cue.File(file.getName()));
 
         double position = 0;
-        // MP3File mp3;
         String performer, songTitle;
 
+        Track currentTrack;
+
         for (int i = 0; i < mmp.getTracks().size(); ++i) {
-            cue.Track track = new cue.Track(i + 1);
+            currentTrack = mmp.getTracks().get(i);
 
-            performer = "Unknown artist";
-            songTitle = // "Track " + track.getNumber();
-            mmp.getTracks().get(i).getFileName();
+            switch (currentTrack.getHeader().getTrackType()) {
+            case TrackType.OVERLAY:
+            case TrackType.OVERLAY_WITH_BEATSYNC:
+            case TrackType.OVERLAY_WITHOUT_BEATSYNC:
+                break;
 
-            /*
-            try {
-                mp3 = new MP3File(new File(mmp.getTracks().get(i)
-                        .getFileName()), false);
+            default:
+                cue.Track cueTrack = new cue.Track(i + 1);
 
-                if (mp3.hasID3v2Tag()) {
-                    AbstractID3v2 tag = mp3.getID3v2Tag();
+                performer = "Unknown artist";
+                songTitle = "Track " + cueTrack.getNumber();
 
-                    performer = tag.getLeadArtist();
-                    songTitle = tag.getSongTitle();
-                } else if (mp3.hasID3v1Tag()) {
-                    ID3v1 tag = mp3.getID3v1Tag();
+                cueTrack.setPerformer(performer);
+                cueTrack.setTitle(songTitle);
+                cueTrack.getIndices().add(new Index(position));
 
-                    performer = tag.getArtist();
-                    songTitle = tag.getSongTitle();
-                }
-            } catch (IOException e) {
+                cueSheet.getTracks().add(cueTrack);
 
-            } catch (TagException e) {
+                Marker outroAnchor = new LinkedList<Marker>(mmp.getTracks()
+                        .get(i).getMarkers(Marker.OUTRO_RANGE)).getLast();
 
+                position += outroAnchor.getPosition() / 1000000.0;
+                break;
             }
-            */
-
-            track.setPerformer(performer);
-            track.setTitle(songTitle);
-
-            track.getIndices().add(new Index(position));
-
-            cueSheet.getTracks().add(track);
-
-            TrackMeta outroAnchor = new LinkedList<TrackMeta>(mmp.getTracks()
-                    .get(i).getMarkers(TrackMeta.OUTRO_RANGE)).getLast();
-
-            position += outroAnchor.getPosition() / 1000000.0;
         }
         /*
         BufferedWriter wr = new BufferedWriter(new FileWriter(file.toString().concat(".cue")));
         */
-
-        System.out.println(cueSheet);
 
         new CueSheetWriter(new PrintWriter(System.out)).write(cueSheet);
     }
