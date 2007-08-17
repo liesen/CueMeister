@@ -25,9 +25,9 @@ public class Mmp2CueTest {
             IOException {
         File file = new File(
         // "C:\\Documents and Settings\\johan\\Desktop\\mini\\do it again_star guitar_neo violence_25 years and running_toop toop.mmp");
-                "7.mmp"
+                // "7.mmp"
                 // "6.mmp"
-                // "C:\\DOCUME~1\\johan\\LOCALS~1\\Temp\\Two\\two - mixed by trancer.mmp"
+                "C:\\DOCUME~1\\johan\\LOCALS~1\\Temp\\Two\\two - mixed by trancer.mmp"
         );
         MixmeisterPlaylist mmp = MixmeisterPlaylist.open(file);
 

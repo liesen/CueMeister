@@ -22,7 +22,7 @@ public class RiffFile extends RiffChunk {
     }
 
     public RiffFile(ByteBuffer buffer) {
-        super(-1); // Length unknown
+        super(0); // Length unknown
 
         this.buffer = buffer.order(ByteOrder.LITTLE_ENDIAN);
     }

@@ -20,7 +20,7 @@ public class ChunkContainer extends Chunk {
      * @param length
      */
     public ChunkContainer(String identifier, int length) {
-        this(identifier, length, "?");
+        this(identifier, length, "");
     }
 
     /**
@@ -29,7 +29,7 @@ public class ChunkContainer extends Chunk {
      * @param data
      */
     public ChunkContainer(String identifier, int length, String contentType) {
-        super(identifier, length, null);
+        super(identifier, length, new byte[length]);
 
         this.contentType = contentType;
         this.chunks = new LinkedList<Chunk>();

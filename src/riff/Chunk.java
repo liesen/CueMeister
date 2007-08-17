@@ -1,5 +1,7 @@
 package riff;
 
+import java.util.Arrays;
+
 public class Chunk {
     protected String identifier;
     protected int length;
@@ -15,7 +17,7 @@ public class Chunk {
     }
 
     public Chunk(String identifier, int length) {
-        this(identifier, length, null);
+        this(identifier, length, new byte[length]);
     }
 
     public Chunk(byte[] identifier, int length, byte[] data) {
@@ -25,7 +27,7 @@ public class Chunk {
     public Chunk(String identifier, int length, byte[] data) {
         this.identifier = identifier;
         this.length = length;
-        this.data = data;
+        this.data = Arrays.copyOf(data, length);
     }
 
     public boolean canContainSubchunks() {
