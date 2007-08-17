@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="CueMeister" basedir=".">
+	<property name="srcdir" location="${basedir}/src"/>
+	<property name="dstdir" location="${basedir}/bin"/>
+	<property name="builddir" location="${basedir}/build"/>
+	
+	<target name="hello">
+		<echo message="${basedir}"/>
+		<echo message="${build}"/>
+	</target>
+	
+	<target name="compile">
+		<javac srcdir="${srcdir}"
+         destdir="${dstdir}"
+         classpath="jarfile"
+         debug="on"
+	/>
+	</target>
+	
+	<path id="project.classpath">
+	    <pathelement location="${lib.dir}/foo.jar" />
+	    <pathelement location="${lib.dir}/bar.jar" />
+	</path>
+	
+	<target name="jar" depends="compile"> 
+		<property name="jarfile" value="${builddir}/CueMeister.jar"/>
+		
+		<property name="version.num" value="1.00"/>
+	   <buildnumber file="build.num"/>
+		
+		<delete file="${jarfile}"/>
+		
+		<mkdir dir="${builddir}"/>
+		
+		<pathconvert property="mf.classpath" pathsep=" ">
+			<path refid="project.classpath" />
+			<flattenmapper />
+		</pathconvert>
+
+		<manifest file="MANIFEST.MF">
+			<attribute name="Built-By" value="${user.name}"/>
+			<attribute name="Main-Class" value="CueMeister"/>
+			<attribute name="Implementation-Version" value="${version.num}-b${build.number}"/>   
+			<attribute name="Built-Date" value="${TODAY}"/>
+			<attribute name="Class-Path" value="${mf.classpath}"/>
+		</manifest>
+		
+		<jar destfile="${jarfile}">
+			<fileset dir="${dstdir}">
+				<include name="**/*.class"/>
+			</fileset>
+			<manifest file="MANIFEST.MF"/>
+		</jar>
+	</target>
+	
+	<target name="cleanup">
+		<delete>
+			<fileset dir="." includes="**/*.class"/>
+			<fileset file="MANIFEST.MF"/>
+		</delete>
+	</target>
+</project>

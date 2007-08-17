@@ -2,26 +2,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.List;
 
-import org.apache.commons.math.stat.regression.SimpleRegression;
-
+import mixmeister.mmp.Marker;
 import mixmeister.mmp.MarkerPositionComparator;
-import mixmeister.mmp.MixingType;
 import mixmeister.mmp.MixmeisterPlaylist;
 import mixmeister.mmp.Track;
-import mixmeister.mmp.Marker;
 import mixmeister.mmp.TrackType;
 import cue.CueSheet;
 import cue.CueSheetWriter;
 import cue.Index;
 
-public class MmpTest {
+public class Mmp2CueTest {
 
-    public MmpTest() {
+    public Mmp2CueTest() {
         super();
     }
 
@@ -29,7 +25,10 @@ public class MmpTest {
             IOException {
         File file = new File(
         // "C:\\Documents and Settings\\johan\\Desktop\\mini\\do it again_star guitar_neo violence_25 years and running_toop toop.mmp");
-                "7.mmp");
+                "7.mmp"
+                // "6.mmp"
+                // "C:\\DOCUME~1\\johan\\LOCALS~1\\Temp\\Two\\two - mixed by trancer.mmp"
+        );
         MixmeisterPlaylist mmp = MixmeisterPlaylist.open(file);
 
         CueSheet cueSheet = new CueSheet("VA", "Test");
@@ -61,10 +60,10 @@ public class MmpTest {
 
                 cueSheet.getTracks().add(cueTrack);
 
-                Marker outroAnchor = new LinkedList<Marker>(mmp.getTracks()
-                        .get(i).getMarkers(Marker.OUTRO_RANGE)).getLast();
+                Marker outroAnchor = new LinkedList<Marker>(currentTrack.getMarkers(Marker.OUTRO_RANGE)).getLast();
+                Marker introAnchor = new LinkedList<Marker>(currentTrack.getMarkers(Marker.INTRO_RANGE)).getLast();
 
-                position += outroAnchor.getPosition() / 1000000.0;
+                position += (outroAnchor.getPosition() - introAnchor.getPosition()) / 1000000.0;
                 break;
             }
         }
