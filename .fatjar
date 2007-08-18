@@ -1,5 +1,5 @@
 #Fat Jar Configuration File
-#Tue Aug 07 15:52:30 CEST 2007
+#Fri Aug 17 23:32:41 CEST 2007
 onejar.license.required=false
 manifest.classpath=
 manifest.removesigners=true
@@ -10,5 +10,5 @@ manifest.mainclass=CueMeister
 manifest.file=<createnew>
 jarname.isextern=false
 onejar.expand=
-excludes=<po|liesen>;<jar|org.eclipse.ui.forms_3.3.0.v20070511.jar>
+excludes=<po|CueMeister>~Mmp2CueTest.class;<po|org.eclipse.swt>;<jar|commons-math-1.1.jar>
 includes=

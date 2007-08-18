@@ -141,6 +141,7 @@ public class MixmeisterPlaylist {
 
         buf.get(data);
 
+        /*
         System.out.print(ch.getIdentifier() + ":");
         
         for (int i = 0; i < data.length; ++i) {
@@ -148,6 +149,7 @@ public class MixmeisterPlaylist {
         }
         
         System.out.println();
+        */
 
         return data;
     }

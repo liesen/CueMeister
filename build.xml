@@ -46,11 +46,10 @@
 			<attribute name="Class-Path" value="${mf.classpath}"/>
 		</manifest>
 		
-		<jar destfile="${jarfile}">
+		<jar destfile="${jarfile}" manifest="MANIFEST.MF">
 			<fileset dir="${dstdir}">
 				<include name="**/*.class"/>
 			</fileset>
-			<manifest file="MANIFEST.MF"/>
 		</jar>
 	</target>
 	
