@@ -8,7 +8,7 @@ package mixmeister.mmp;
  * 
  * @author johan
  */
-public class Marker {    
+public class Marker {
     public static final int INTRO_RANGE              =        0x1;
     public static final int OUTRO_RANGE              =        0x2;
     public static final int FIRST_VOLUME_MARKER      =       0x10;

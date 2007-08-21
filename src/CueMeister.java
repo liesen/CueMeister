@@ -43,9 +43,6 @@ import org.jaudiotagger.audio.InvalidAudioFrameException;
 import org.jaudiotagger.audio.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.TagException;
-import org.jaudiotagger.tag.id3.AbstractID3v2Frame;
-import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
-import org.jaudiotagger.tag.id3.ID3v1Tag;
 
 import riff.RiffException;
 import cue.CueSheet;
@@ -117,19 +114,19 @@ public class CueMeister extends ApplicationWindow {
             @Override
             public void run() {
                 super.run();
-    
+
                 FileDialog dialog = new FileDialog(getShell());
                 dialog.setFilterExtensions(new String[] { "*.mmp" });
-    
+
                 try {
                     final String path = dialog.open();
-    
+
                     if (path == null) {
                         return;
                     }
-    
+
                     File file = new File(path);
-    
+
                     try {
                         mmp = MixmeisterPlaylist.open(file);
                         cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, true);
@@ -148,7 +145,6 @@ public class CueMeister extends ApplicationWindow {
         };
     }
 
-
     /**
      * @return
      */
@@ -157,7 +153,7 @@ public class CueMeister extends ApplicationWindow {
             @Override
             public void run() {
                 super.run();
-    
+
                 MessageDialog
                         .openInformation(
                                 getShell(),
@@ -221,7 +217,7 @@ public class CueMeister extends ApplicationWindow {
 
                 performer = "Unknown artist";
                 songTitle = "Track " + cueTrack.getNumber();
-                
+
                 String fileName = mmpTrack.getFileName();
 
                 // Fetch ID3
@@ -230,32 +226,8 @@ public class CueMeister extends ApplicationWindow {
                         MP3File mp3 = new MP3File(new File(fileName),
                                 MP3File.LOAD_ALL, true);
 
-                        if (mp3.hasID3v1Tag()) {
-                            ID3v1Tag tag = mp3.getID3v1Tag();
-
-                            performer = tag.getArtist();
-                            songTitle = tag.getTitle();
-                        }
-
-                        // Try preferred ID3v2
-                        if (mp3.hasID3v2Tag()) {
-                            AbstractID3v2Tag tag = mp3.getID3v2TagAsv24();
-
-                            // Get performer
-                            String value = extractID3v2TagValue(tag, "TCOM",
-                                    "TPE1", "TOPE", "TEXT", "TOLY");
-
-                            if (value != null) {
-                                performer = value;
-                            }
-
-                            // Get song title
-                            value = extractID3v2TagValue(tag, "TIT2", "TOAL");
-
-                            if (value != null) {
-                                songTitle = value;
-                            }
-                        }
+                        performer = ID3Helper.getArtist(mp3);
+                        songTitle = ID3Helper.getTitle(mp3);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (TagException e) {
@@ -273,11 +245,13 @@ public class CueMeister extends ApplicationWindow {
 
                 cueSheet.getTracks().add(cueTrack);
 
-                // Get last outro marker
-                Marker outroAnchor = new LinkedList<Marker>(mmp.getTracks()
-                        .get(i).getMarkers(Marker.OUTRO_RANGE)).getLast();
+                Marker outroAnchor = new LinkedList<Marker>(mmpTrack
+                        .getMarkers(Marker.OUTRO_RANGE)).getLast();
+                Marker introAnchor = new LinkedList<Marker>(mmpTrack
+                        .getMarkers(Marker.INTRO_RANGE)).getLast();
 
-                position += outroAnchor.getPosition() / 1000000.0;
+                position += (outroAnchor.getPosition() - introAnchor
+                        .getPosition()) / 1000000.0;
                 break;
             }
         }
@@ -285,33 +259,6 @@ public class CueMeister extends ApplicationWindow {
         return cueSheet;
     }
 
-    /**
-     * Returns the first value (body) found in a ID3v2 tag
-     * 
-     * @param tag
-     * @param identifiers
-     * @return
-     */
-    private static String extractID3v2TagValue(AbstractID3v2Tag tag,
-            String... identifiers) {
-        for (String identifier : identifiers) {
-            if (tag.hasFrameAndBody(identifier)) {
-                Object frame = tag.getFrame(identifier);
-
-                if (frame != null && frame instanceof AbstractID3v2Frame) {
-                    String value = ((AbstractID3v2Frame) frame).getBody()
-                            .getObjectValue("Text").toString();
-
-                    if (value != null && value.trim().length() > 0) {
-                        return value.trim();
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-    
     private TableViewer createTableViewer(Composite parent, int nColumns) {
         Table table = new Table(parent, SWT.V_SCROLL | SWT.BORDER
                 | SWT.HIDE_SELECTION);
