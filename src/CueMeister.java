@@ -15,13 +15,12 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridLayoutFactory;
-import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLayoutData;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
-import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
@@ -48,7 +47,6 @@ import riff.RiffException;
 import cue.CueSheet;
 import cue.CueSheetWriter;
 import cue.Index;
-import cue.Track;
 
 public class CueMeister extends ApplicationWindow {
     public static final String DEFAULT_PERFORMER = "CueMeister";
@@ -67,8 +65,8 @@ public class CueMeister extends ApplicationWindow {
 
     private Text file;
 
-    public CueMeister() {
-        super(null);
+    public CueMeister(Shell parentShell) {
+        super(parentShell);
 
         addMenuBar();
 
@@ -178,7 +176,7 @@ public class CueMeister extends ApplicationWindow {
                 final String path = new FileDialog(getShell()).open();
 
                 try {
-                    CueSheet cue = gatherCueSheet();
+                    CueSheet cue = getCueSheet();
                     new CueSheetWriter(new FileWriter(path)).write(cue);
                 } catch (IOException e) {
                     MessageDialog.openError(getShell(), "Write error",
@@ -223,11 +221,15 @@ public class CueMeister extends ApplicationWindow {
                 // Fetch ID3
                 if (readID3) {
                     try {
-                        MP3File mp3 = new MP3File(new File(fileName),
-                                MP3File.LOAD_ALL, true);
+                        File file = new File(fileName);
 
-                        performer = ID3Helper.getArtist(mp3);
-                        songTitle = ID3Helper.getTitle(mp3);
+                        if (file.exists()) {
+                            MP3File mp3 = new MP3File(file, MP3File.LOAD_ALL,
+                                    true);
+
+                            performer = ID3Helper.getArtist(mp3);
+                            songTitle = ID3Helper.getTitle(mp3);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (TagException e) {
@@ -261,7 +263,7 @@ public class CueMeister extends ApplicationWindow {
 
     private TableViewer createTableViewer(Composite parent, int nColumns) {
         Table table = new Table(parent, SWT.V_SCROLL | SWT.BORDER
-                | SWT.HIDE_SELECTION);
+                | SWT.FULL_SELECTION);
 
         GridData tableData = new GridData();
 
@@ -282,50 +284,27 @@ public class CueMeister extends ApplicationWindow {
         }
 
         Composite comp = new Composite(parent, SWT.NONE);
+
         GridLayoutFactory.swtDefaults().applyTo(comp);
 
         createForm(comp);
 
-        String[] columnHeaders = new String[] { "Performer", "Title", "Index" };
+        final String[] columnHeaders = new String[] { "Performer", "Title",
+                "Index" };
         ColumnLayoutData[] columnLayouts = new ColumnLayoutData[] {
                 new ColumnWeightData(3, true), new ColumnWeightData(4, true),
                 new ColumnWeightData(1, true) };
-        CellLabelProvider[] labelProviders = new CellLabelProvider[] {
-        // Performer column
-                new CellLabelProvider() {
-                    @Override
-                    public void update(ViewerCell cell) {
-                        Track tr = (Track) cell.getElement();
-                        cell.setText(tr.getPerformer());
-                    }
-                },
-
-                // Title column
-                new CellLabelProvider() {
-                    @Override
-                    public void update(ViewerCell cell) {
-                        Track tr = (Track) cell.getElement();
-                        cell.setText(tr.getTitle());
-                    }
-                },
-
-                // Index column
-                new CellLabelProvider() {
-                    @Override
-                    public void update(ViewerCell cell) {
-                        Track tr = (Track) cell.getElement();
-
-                        if (tr.getIndices().size() > 0) {
-                            cell.setText(tr.getIndices().get(0).toString());
-                        }
-                    }
-                } };
-
+        
         tableViewer = createTableViewer(comp, 3);
 
-        Table table = tableViewer.getTable();
-        TableLayout tableLayout = new TableLayout();
+        tableViewer.setContentProvider(new CueSheetContentProvider());
+        tableViewer.setLabelProvider(new CueSheetLabelProvider());
+        tableViewer.setUseHashlookup(true);
 
+        final Table table = tableViewer.getTable();
+
+        TableLayout tableLayout = new TableLayout();
+        
         for (int i = 0; i < columnHeaders.length; ++i) {
             tableLayout.addColumnData(columnLayouts[i]);
 
@@ -333,10 +312,7 @@ public class CueMeister extends ApplicationWindow {
 
             tc.setResizable(columnLayouts[i].resizable);
             tc.setText(columnHeaders[i]);
-
-            TableViewerColumn tvc = new TableViewerColumn(tableViewer, tc);
-
-            tvc.setLabelProvider(labelProviders[i]);
+            tc.pack();
         }
 
         table.setLayout(tableLayout);
@@ -344,16 +320,19 @@ public class CueMeister extends ApplicationWindow {
         table.setLinesVisible(true);
         table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-        tableViewer.setUseHashlookup(true);
-        tableViewer.setContentProvider(new CueSheetContentProvider());
-        // tableView.setLabelProvider(new CueSheetLabelProvider());
-        tableViewer.setInput(cueSheet);
+        CellEditor[] editors = new CellEditor[] { new TextCellEditor(table),
+                new TextCellEditor(table), new TextCellEditor(table) };
 
+        editors[2].setValidator(new CueIndexValidator());
+
+        tableViewer.setColumnProperties(columnHeaders);
+        tableViewer.setCellModifier(new CueTrackModifier(tableViewer));
+        tableViewer.setCellEditors(editors);
+        
         return comp;
     }
 
     protected void createForm(final Composite parent) {
-        // Composite comp = new Composite(parent, SWT.NONE);
         Group comp = new Group(parent, SWT.NONE);
         comp.setText("Cue sheet information");
 
@@ -386,10 +365,8 @@ public class CueMeister extends ApplicationWindow {
         browseButton.setText("Browse...");
         browseButton.setLayoutData(new GridData(SWT.RIGHT));
         browseButton.addSelectionListener(new SelectionListener() {
-
             @Override
             public void widgetDefaultSelected(SelectionEvent e) {
-                // TODO Auto-generated method stub
 
             }
 
@@ -405,17 +382,22 @@ public class CueMeister extends ApplicationWindow {
         });
     }
 
-    protected CueSheet gatherCueSheet() {
-        CueSheet cue = getCueSheetFromMixmeisterPlaylist(mmp, true); // new CueSheet(performer.getText(), title.getText());
-
-        cue.setPerformer(performer.getText());
-        cue.setTitle(title.getText());
+    protected CueSheet getCueSheet() {
+        cueSheet.setPerformer(performer.getText());
+        cueSheet.setTitle(title.getText());
 
         if (file.getText() != null && !file.getText().isEmpty()) {
-            cue.setFile(new cue.File(file.getText()));
+            String path = file.getText();
+            String ext = path.substring(path.lastIndexOf('.'));
+            
+            if ("WAV".equalsIgnoreCase(ext)) {
+                cueSheet.setFile(new cue.File(path, cue.File.Type.WAVE));
+            } else {
+                cueSheet.setFile(new cue.File(file.getText()));
+            }
         }
-
-        return cue;
+        
+        return cueSheet;
     }
 
     /**
@@ -481,7 +463,7 @@ public class CueMeister extends ApplicationWindow {
                 e.printStackTrace();
             }
         } else {
-            new CueMeister().run();
+            new CueMeister(null).run();
         }
     }
 }

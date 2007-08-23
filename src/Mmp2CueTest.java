@@ -2,12 +2,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 
 import mixmeister.mmp.Marker;
-import mixmeister.mmp.MarkerPositionComparator;
 import mixmeister.mmp.MixmeisterPlaylist;
 import mixmeister.mmp.Track;
 import mixmeister.mmp.TrackType;
