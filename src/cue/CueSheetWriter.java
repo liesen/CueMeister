@@ -61,4 +61,8 @@ public class CueSheetWriter {
 
         out.flush();
     }
+    
+    public void close() throws IOException {
+        out.close();
+    }
 }

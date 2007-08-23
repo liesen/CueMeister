@@ -48,26 +48,47 @@ import cue.CueSheet;
 import cue.CueSheetWriter;
 import cue.Index;
 
+/**
+ *
+ * @author johan
+ *
+ */
 public class CueMeister extends ApplicationWindow {
+    /** */
     public static final String DEFAULT_PERFORMER = "CueMeister";
 
+    /** */
     public static final String DEFAULT_TITLE = "In the mix";
 
+    /** */
     private CueSheet cueSheet;
 
+    /** */
     private MixmeisterPlaylist mmp;
 
+    /** */
     private TableViewer tableViewer;
 
+    /** */
     private Text title;
 
+    /** */
     private Text performer;
 
+    /** */
     private Text file;
 
-    public CueMeister(Shell parentShell) {
+    /** */
+    private boolean readID3;
+
+    /**
+     * @param parentShell
+     */
+    public CueMeister(Shell parentShell, boolean readID3) {
         super(parentShell);
 
+        this.readID3 = readID3;
+        
         addMenuBar();
 
         cueSheet = new CueSheet("", "");
@@ -105,6 +126,8 @@ public class CueMeister extends ApplicationWindow {
     }
 
     /**
+     * Creates action that loads a MixMeister playlist
+     * 
      * @return
      */
     private Action createLoadAction() {
@@ -127,7 +150,7 @@ public class CueMeister extends ApplicationWindow {
 
                     try {
                         mmp = MixmeisterPlaylist.open(file);
-                        cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, true);
+                        cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, readID3);
                         tableViewer.setInput(cueSheet);
                     } catch (RiffException e) {
                         e.printStackTrace();
@@ -177,7 +200,10 @@ public class CueMeister extends ApplicationWindow {
 
                 try {
                     CueSheet cue = getCueSheet();
-                    new CueSheetWriter(new FileWriter(path)).write(cue);
+                    CueSheetWriter w = new CueSheetWriter(new FileWriter(path));
+                    
+                    w.write(cue);
+                    w.close();
                 } catch (IOException e) {
                     MessageDialog.openError(getShell(), "Write error",
                             "Could not write to file");
@@ -199,10 +225,9 @@ public class CueMeister extends ApplicationWindow {
         CueSheet cueSheet = new CueSheet("", "");
         double position = 0;
         String performer, songTitle;
-        mixmeister.mmp.Track mmpTrack;
-
+        
         for (int i = 0; i < mmp.getTracks().size(); ++i) {
-            mmpTrack = mmp.getTracks().get(i);
+            mixmeister.mmp.Track mmpTrack = mmp.getTracks().get(i);
 
             switch (mmpTrack.getHeader().getTrackType()) {
             case TrackType.OVERLAY:
@@ -261,6 +286,13 @@ public class CueMeister extends ApplicationWindow {
         return cueSheet;
     }
 
+    /**
+     * Creates table and viewer that displays the tracks
+     * 
+     * @param parent
+     * @param nColumns
+     * @return
+     */
     private TableViewer createTableViewer(Composite parent, int nColumns) {
         Table table = new Table(parent, SWT.V_SCROLL | SWT.BORDER
                 | SWT.FULL_SELECTION);
@@ -280,7 +312,7 @@ public class CueMeister extends ApplicationWindow {
     @Override
     protected Control createContents(Composite parent) {
         if (mmp != null) {
-            cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, true);
+            cueSheet = getCueSheetFromMixmeisterPlaylist(mmp, readID3);
         }
 
         Composite comp = new Composite(parent, SWT.NONE);
@@ -332,6 +364,11 @@ public class CueMeister extends ApplicationWindow {
         return comp;
     }
 
+    /**
+     * Creates form for cue sheet properties
+     * 
+     * @param parent
+     */
     protected void createForm(final Composite parent) {
         Group comp = new Group(parent, SWT.NONE);
         comp.setText("Cue sheet information");
@@ -390,7 +427,7 @@ public class CueMeister extends ApplicationWindow {
             String path = file.getText();
             String ext = path.substring(path.lastIndexOf('.'));
             
-            if ("WAV".equalsIgnoreCase(ext)) {
+            if (".WAV".equalsIgnoreCase(ext)) {
                 cueSheet.setFile(new cue.File(path, cue.File.Type.WAVE));
             } else {
                 cueSheet.setFile(new cue.File(file.getText()));
@@ -463,7 +500,7 @@ public class CueMeister extends ApplicationWindow {
                 e.printStackTrace();
             }
         } else {
-            new CueMeister(null).run();
+            new CueMeister(null, readID3).run();
         }
     }
 }
