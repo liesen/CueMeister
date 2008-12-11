@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.7.0
+Created-By: 10.0-b22 (Sun Microsystems Inc.)
+Built-By: liesen
+Main-Class: CueMeister
+Implementation-Version: 1.00-b0
+Built-Date: ${TODAY}
+Class-Path: foo.jar bar.jar
+

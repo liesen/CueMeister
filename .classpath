@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.equinox.common_3.3.0.v20070426.jar"/>
-	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.jface_3.3.0.I20070606-0010.jar"/>
-	<classpathentry kind="lib" path="C:/java/eclipse/plugins/org.eclipse.core.commands_3.3.0.I20070605-0010.jar"/>
-	<classpathentry kind="lib" path="C:/java/lib/jaudiotaggerv1.0.5/dist/jaudiotagger.jar"/>
-	<classpathentry kind="lib" path="C:/java/lib/commons-math-1.1/commons-math-1.1.jar"/>
+	<classpathentry kind="lib" path="/home/liesen/eclipse/plugins/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar"/>
+	<classpathentry kind="lib" path="/home/liesen/eclipse/plugins/org.eclipse.jface_3.4.0.I20080606-1300.jar"/>
+	<classpathentry kind="lib" path="/home/liesen/eclipse/plugins/org.eclipse.core.commands_3.4.0.I20080509-2000.jar"/>
+	<classpathentry kind="lib" path="/home/liesen/java/lib/jfreechart-1.0.11/lib/jfreechart-1.0.11.jar"/>
+	<classpathentry kind="lib" path="/home/liesen/java/lib/jaudiotaggerv1.0.8/dist/jaudiotagger.jar" sourcepath="/home/liesen/java/lib/jaudiotaggerv1.0.8/dist/jaudiotaggersrc.jar"/>
+	<classpathentry kind="lib" path="/home/liesen/java/lib/jfreechart-1.0.11/lib/jcommon-1.0.14.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

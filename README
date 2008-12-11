@@ -1,0 +1,31 @@
+CueMeister
+==========
+
+CueMeister is a tool for converting Mixmeister playlist files into cue sheets
+suitable for CD burning.
+
+
+Issues
+------
+
+Use cuemeister.googlecode.com to report bugs, etc.
+
+
+Building
+--------
+
+Eclipse is needed.
+
+Checkout the source from cuemeister.googlecode.com. Update your build path in
+Eclipse; it must include recent versions of 
+
+  - jaudiotagger (https://jaudiotagger.dev.java.net/)
+  - Eclipse core.commands, equinox.common and jface. These are found in your
+    eclipse/plugins directory.
+  - swt.jar from the SWT toolkit (http://www.eclipse.org/swt/)
+
+
+Contact
+-------
+
+See Issues.

@@ -1,73 +1,80 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 import mixmeister.mmp.Marker;
 import mixmeister.mmp.MixmeisterPlaylist;
 import mixmeister.mmp.Track;
 import mixmeister.mmp.TrackType;
 import cue.CueSheet;
-import cue.CueSheetWriter;
 import cue.Index;
 
 public class Mmp2CueTest {
 
-    public Mmp2CueTest() {
-        super();
-    }
+  public Mmp2CueTest() {
+    super();
+  }
 
-    public static void main(String... args) throws FileNotFoundException,
-            IOException {
-        File file = new File(
-        // "C:\\Documents and Settings\\johan\\Desktop\\mini\\do it again_star guitar_neo violence_25 years and running_toop toop.mmp");
-                // "7.mmp"
-                // "6.mmp"
-                "C:\\DOCUME~1\\johan\\LOCALS~1\\Temp\\Two\\two - mixed by trancer.mmp"
-        );
-        MixmeisterPlaylist mmp = MixmeisterPlaylist.open(file);
+  public static void main(String... args) throws FileNotFoundException, IOException {
+    File file = new File("mxmfusion2.mmp");
+    MixmeisterPlaylist mmp = MixmeisterPlaylist.open(file);
 
-        CueSheet cueSheet = new CueSheet("VA", "Test");
-        cueSheet.setFile(new cue.File(file.getName()));
+    CueSheet cueSheet = new CueSheet("VA", "Test");
+    cueSheet.setFile(new cue.File(file.getName()));
 
-        double position = 0;
-        String performer, songTitle;
+    double position = 0;
+    String performer, songTitle;
+    int trackNo = 1;
 
-        Track currentTrack;
+    for (Track currentTrack : mmp.getTracks()) {
+      switch (currentTrack.getHeader().getTrackType()) {
+        case TrackType.OVERLAY:
+        case TrackType.OVERLAY_WITH_BEATSYNC:
+        case TrackType.OVERLAY_WITHOUT_BEATSYNC:
+          break;
 
-        for (int i = 0; i < mmp.getTracks().size(); ++i) {
-            currentTrack = mmp.getTracks().get(i);
+        default:
+          cue.Track cueTrack = new cue.Track(trackNo++);
 
-            switch (currentTrack.getHeader().getTrackType()) {
-            case TrackType.OVERLAY:
-            case TrackType.OVERLAY_WITH_BEATSYNC:
-            case TrackType.OVERLAY_WITHOUT_BEATSYNC:
-                break;
+          performer = "Unknown artist";
+          songTitle = "Track " + cueTrack.getNumber();
 
-            default:
-                cue.Track cueTrack = new cue.Track(i + 1);
+          cueTrack.setPerformer(performer);
+          cueTrack.setTitle(songTitle);
+          cueTrack.getIndices().add(new Index(position));
 
-                performer = "Unknown artist";
-                songTitle = "Track " + cueTrack.getNumber();
+          cueSheet.getTracks().add(cueTrack);
 
-                cueTrack.setPerformer(performer);
-                cueTrack.setTitle(songTitle);
-                cueTrack.getIndices().add(new Index(position));
-
-                cueSheet.getTracks().add(cueTrack);
-
-                Marker outroAnchor = new LinkedList<Marker>(currentTrack.getMarkers(Marker.OUTRO_RANGE)).getLast();
-                Marker introAnchor = new LinkedList<Marker>(currentTrack.getMarkers(Marker.INTRO_RANGE)).getLast();
-
-                position += (outroAnchor.getPosition() - introAnchor.getPosition()) / 1000000.0;
-                break;
+          Marker outroAnchor =
+              new LinkedList<Marker>(currentTrack.getMarkers(Marker.OUTRO_RANGE)).getLast();
+          Marker introAnchor =
+              new LinkedList<Marker>(currentTrack.getMarkers(Marker.INTRO_RANGE)).getLast();
+          
+//          Set<Marker> bpmMarkers = new TreeSet<Marker>(new MarkerPositionComparator());
+//          
+//          bpmMarkers.addAll(currentTrack.getMarkers(0x1000000));
+//          bpmMarkers.addAll(currentTrack.getMarkers(0x2000000));
+//          
+          Set<Set<Marker>> markers = new HashSet<Set<Marker>>(currentTrack.getMetaData());
+          
+          for (Set<Marker> ms : markers) {
+            System.out.printf("%x\t", ms.iterator().next().getType());
+            
+            for (Marker m : ms) {
+              System.out.printf("%d\t", m.getVolume());
             }
-        }
-        /*
-        BufferedWriter wr = new BufferedWriter(new FileWriter(file.toString().concat(".cue")));
-        */
+            
+            System.out.println();
+          }
 
-        new CueSheetWriter(new PrintWriter(System.out)).write(cueSheet);
+          position += (outroAnchor.getPosition() - introAnchor.getPosition()) / 1000000.0;
+          break;
+      }
     }
+
+//    new CueSheetWriter(new PrintWriter(System.out)).write(cueSheet);
+  }
 }

@@ -1,100 +1,163 @@
 package riff;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 
-public class RiffFile extends RiffChunk {
-    private ByteBuffer buffer;
+/**
+ * Wraps a file that is formatted according to the RIFF (Resource Interchange
+ * File Format) file format. RIFF is a generic meta-format for storing data in
+ * tagged chunks.
+ * 
+ * <p>
+ * Calling {@code #read()} or {@code #open(File)} will recursively read and
+ * parse the entire contents of a RIFF file.
+ * 
+ * <p>
+ * See <a href="http://en.wikipedia.org/wiki/Resource_Interchange_File_Format">
+ * http://en.wikipedia.org/wiki/Resource_Interchange_File_Format</a>.
+ * 
+ * @author liesen
+ */
+public class RiffFile extends RiffChunk implements Closeable {
+  /**
+   * The channel that's being read from.
+   */
+  private final FileInputStream fin;
 
+  /** Flag is set if the file has already been parsed. */
+  private boolean isRead = false;
 
-    public RiffFile(File file) throws FileNotFoundException, IOException {
-        this(new FileInputStream(file));
+  /**
+   * Opens--but does not read--a RIFF file. Call {@code #read()} to parse the
+   * file.
+   * 
+   * @param file
+   * @throws FileNotFoundException
+   * @throws IOException
+   */
+  public RiffFile(File file) throws FileNotFoundException, IOException {
+    super(0);
+    this.fin = new FileInputStream(file);
+  }
+
+  /**
+   * Factory method to open--and fully read--a RIFF file. *
+   * 
+   * @param file
+   * @return
+   * @throws FileNotFoundException
+   * @throws IOException
+   */
+  public static RiffFile open(File file) throws FileNotFoundException, IOException {
+    RiffFile riff = new RiffFile(file);
+    riff.read();
+
+    return riff;
+  }
+
+  /**
+   * Reads the "current" chunk and recursively reads any sub-chunks.
+   * 
+   * @return
+   * @throws IOException
+   */
+  public int read() throws IOException {
+    if (!isRead) {
+      Chunk chunk = readChunkHeader();
+      setLength(chunk.getLength());
+      handleChunk(this);
+      isRead = true;
     }
 
-    public RiffFile(FileInputStream fis) throws IOException {
-        this(fis.getChannel().map(
-            FileChannel.MapMode.READ_ONLY, 0, fis.getChannel().size()));
+    return 8 + getLength();
+  }
+
+  /**
+   * Reads the raw data associated with {@code chunk}.
+   * 
+   * @param chunk
+   * @return the number of bytes read.
+   * @throws IOException
+   */
+  protected int handleChunk(Chunk chunk) throws IOException {
+    int len = chunk.getLength();
+    byte[] data = new byte[len];
+    fin.read(data);
+    chunk.setData(data);
+
+    // Squash pad byte
+    if ((len & 1) == 1) {
+      len += len % 2;
+      fin.skip(1);
     }
 
-    public RiffFile(ByteBuffer buffer) {
-        super(0); // Length unknown
+    return len;
+  }
 
-        this.buffer = buffer.order(ByteOrder.LITTLE_ENDIAN);
+  /**
+   * Recursively expands {@code container}.
+   * 
+   * @param container
+   * @return the number of bytes read.
+   * @throws IOException
+   */
+  protected int handleChunk(ChunkContainer container) throws IOException {
+    // Read content type
+    byte[] contentType = new byte[4];
+    fin.read(contentType);
+    container.setContentType(contentType);
+
+    int numBytesRead = 4; // Content type length
+
+    while (numBytesRead < container.getLength()) {
+      Chunk chunk = readChunkHeader();
+
+      numBytesRead += 8; // Header length
+
+      if ("LIST".equals(chunk.getIdentifier())) {
+        chunk = new ChunkContainer(chunk);
+
+        numBytesRead += handleChunk((ChunkContainer) chunk);
+      } else {
+        numBytesRead += handleChunk(chunk);
+      }
+
+      container.getChunks().add(chunk);
     }
 
-    public int read() throws RiffException {
-        Chunk chunk = readChunkHeader();
-/*
-        if (!identifier.equals(chunk.getIdentifier())) {
-            // File must start with RIFF
-            throw new RiffException("Invalid RIFF file header");
-        }
-*/
-        setLength(chunk.getLength());
+    return numBytesRead;
+  }
 
-        return handleChunk(this);
-    }
+  /**
+   * Reads a chunk header. 4 bytes identifier plus 4 bytes (unsigned int)
+   * content length.
+   * 
+   * @return
+   * @throws IOException
+   */
+  protected Chunk readChunkHeader() throws IOException {
+    byte[] identifier = new byte[4];
+    fin.read(identifier);
 
-    protected int handleChunk(Chunk chunk) {
-        int len = chunk.getLength();
-        byte[] data = new byte[len];
-        buffer.get(data);
+    byte[] lengthData = new byte[4];
+    ByteBuffer lengthBuf = ByteBuffer.wrap(lengthData).order(ByteOrder.LITTLE_ENDIAN);
+    fin.read(lengthData);
+    int length = lengthBuf.getInt();
 
-        chunk.setData(data);
+    return new Chunk(identifier, length);
+  }
 
-        // Squash pad byte
-        if ((len & 1) == 1) {
-            len += len % 2;
-            buffer.get();
-        }
-        
-        return len;
-    }
-
-    protected int handleChunk(ChunkContainer container) {
-        // Read content type
-        byte[] contentType = new byte[4];
-        buffer.get(contentType);
-        container.setContentType(contentType);
-
-        int nbytes = 4; // Content type length
-
-        while (nbytes < container.getLength()) {
-            Chunk chunk = readChunkHeader();
-
-            nbytes += 8; // Header length
-
-            if ("LIST".equals(chunk.getIdentifier())) {
-                chunk = new ChunkContainer(chunk);
-
-                nbytes += handleChunk((ChunkContainer) chunk);
-            } else {
-                nbytes += handleChunk(chunk);
-            }
-
-            container.getChunks().add(chunk);
-        }
-
-        return nbytes;
-    }
-
-    /**
-     * Reads a chunk header. 4 bytes identifier plus 4 bytes (unsigned
-     * int) content length.
-     * 
-     * @return
-     */
-    protected Chunk readChunkHeader() {
-        byte[] identifier = new byte[4];
-        buffer.get(identifier);
-
-        int length = buffer.getInt();
-
-        return new Chunk(identifier, length);
-    }
+  /**
+   * Closes the underlying file input stream.
+   * 
+   * @throws IOException
+   */
+  public void close() throws IOException {
+    fin.close();
+  }
 }
