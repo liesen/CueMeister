@@ -3,9 +3,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import mixmeister.mmp.MixmeisterPlaylist;
 
@@ -341,56 +338,5 @@ public class CueMeisterApp extends ApplicationWindow {
     setBlockOnOpen(true);
     open();
     Display.getCurrent().dispose();
-  }
-
-  public static void main(String[] args) {
-    boolean debug = true;
-    boolean readID3 = true;
-    String mmpFile = null;
-    String outFile = null;
-
-    for (int i = 0; i < args.length; ++i) {
-      if ("-debug".equalsIgnoreCase(args[i])) {
-        debug = false;
-      } else if ("-f".equalsIgnoreCase(args[i])) {
-        if (i + 1 >= args.length) {
-          throw new IllegalArgumentException("Must specify file after -f flag");
-        }
-
-        mmpFile = args[++i];
-      } else if ("-o".equalsIgnoreCase(args[i])) {
-        if (i + 1 >= args.length) {
-          throw new IllegalArgumentException("Must specify file after -o flag");
-        }
-
-        outFile = args[++i];
-      } else if ("-no-id3".equalsIgnoreCase(args[i])) {
-        readID3 = false;
-      }
-    }
-
-    if (!debug) {
-      Logger.getLogger("org.jaudiotagger.audio.mp3").setLevel(Level.OFF);
-    }
-
-    if (mmpFile != null) {
-      try {
-        MixmeisterPlaylist mmp = MixmeisterPlaylist.open(new File(mmpFile));
-
-        if (outFile == null) {
-          new CueSheetWriter(new PrintWriter(System.out)).write(CueMeister.convertMixmeisterPlaylistToCueSheet(
-              mmp, readID3));
-        } else {
-          new CueSheetWriter(new FileWriter(outFile)).write(CueMeister.convertMixmeisterPlaylistToCueSheet(mmp,
-              readID3));
-        }
-      } catch (FileNotFoundException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    } else {
-      new CueMeisterApp(null, readID3).run();
-    }
   }
 }
