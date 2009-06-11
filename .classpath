@@ -2,12 +2,10 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/home/liesen/eclipse/plugins/org.eclipse.equinox.common_3.4.0.v20080421-2006.jar"/>
-	<classpathentry kind="lib" path="/home/liesen/eclipse/plugins/org.eclipse.jface_3.4.0.I20080606-1300.jar"/>
-	<classpathentry kind="lib" path="/home/liesen/eclipse/plugins/org.eclipse.core.commands_3.4.0.I20080509-2000.jar"/>
-	<classpathentry kind="lib" path="/home/liesen/java/lib/jfreechart-1.0.11/lib/jfreechart-1.0.11.jar"/>
-	<classpathentry kind="lib" path="/home/liesen/java/lib/jaudiotaggerv1.0.8/dist/jaudiotagger.jar" sourcepath="/home/liesen/java/lib/jaudiotaggerv1.0.8/dist/jaudiotaggersrc.jar"/>
-	<classpathentry kind="lib" path="/home/liesen/java/lib/jfreechart-1.0.11/lib/jcommon-1.0.14.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
+	<classpathentry kind="lib" path="/Users/liesen/code/third_party/jaudiotagger/dist/jaudiotagger.jar" sourcepath="/Users/liesen/code/third_party/jaudiotagger/dist/jaudiotaggersrc.jar"/>
+	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.jface_3.5.0.I20090525-2000.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.jface.source_3.5.0.I20090525-2000.jar"/>
+	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.core.commands_3.5.0.I20090525-2000.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.core.commands.source_3.5.0.I20090525-2000.jar"/>
+	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.equinox.common_3.5.0.v20090520-1800.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.equinox.common.source_3.5.0.v20090520-1800.jar"/>
+	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_3.5.0.v3550a.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64.source_3.5.0.v3550a.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
