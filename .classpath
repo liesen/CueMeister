@@ -7,5 +7,10 @@
 	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.core.commands_3.5.0.I20090525-2000.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.core.commands.source_3.5.0.I20090525-2000.jar"/>
 	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.equinox.common_3.5.0.v20090520-1800.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.equinox.common.source_3.5.0.v20090520-1800.jar"/>
 	<classpathentry kind="lib" path="/Users/liesen/eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64_3.5.0.v3550a.jar" sourcepath="/Users/liesen/eclipse/plugins/org.eclipse.swt.cocoa.macosx.x86_64.source_3.5.0.v3550a.jar"/>
+	<classpathentry kind="lib" path="/Users/liesen/code/third_party/args4j-2.0.12/args4j-2.0.12.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/Users/liesen/code/third_party/args4j-2.0.12/docs/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
