@@ -19,12 +19,10 @@ public class CueSheet extends CueItem {
 
   public static CueSheet open(java.io.File cueFile) throws IOException {
     CueSheet cueSheet = new CueSheet("", "");
-
     BufferedReader reader = new BufferedReader(new FileReader(cueFile));
     CueItem currentItem = cueSheet;
-    String token;
 
-    for (String line; (line = reader.readLine()) != null;) {
+    for (String line, token; (line = reader.readLine()) != null;) {
       Scanner tok = new Scanner(line);
 
       if (!tok.hasNext()) {
@@ -45,7 +43,6 @@ public class CueSheet extends CueItem {
         Scanner sc = tok.useDelimiter(Pattern.compile(":| "));
         int minutes = sc.nextInt(), seconds = sc.nextInt(), frames = sc.nextInt();
         Index index = new Index(minutes, seconds, frames);
-
         ((Track) currentItem).getIndices().add(index);
       } else if ("ISRC".equalsIgnoreCase(token)) {
 
@@ -85,15 +82,11 @@ public class CueSheet extends CueItem {
         }
 
         File file = new File(nextToken, File.Type.getType(tok.next()));
-
         currentItem.setFile(file);
       } else if ("TRACK".equalsIgnoreCase(token)) {
         int trackNo = tok.nextInt();
         String nextToken = tok.nextLine().trim().toUpperCase();
-        Mode trackMode = Mode.getMode(nextToken);
-
-        currentItem = new Track(trackNo, trackMode);
-
+        currentItem = new Track(trackNo, Mode.getMode(nextToken));
         cueSheet.getTracks().add((Track) currentItem);
       } else if ("POSTGAP".equalsIgnoreCase(token)) {
 
@@ -107,7 +100,6 @@ public class CueSheet extends CueItem {
     }
 
     reader.close();
-
     return cueSheet;
   }
 

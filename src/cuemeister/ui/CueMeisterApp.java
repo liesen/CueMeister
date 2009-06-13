@@ -322,12 +322,12 @@ public class CueMeisterApp extends ApplicationWindow {
 
     if (file.getText() != null && !file.getText().isEmpty()) {
       String path = file.getText();
-      String ext = path.substring(path.lastIndexOf('.'));
+      String extension = path.substring(path.lastIndexOf('.'));
 
-      if (".WAV".equalsIgnoreCase(ext)) {
+      if (".WAV".equalsIgnoreCase(extension)) {
         cueSheet.setFile(new cue.File(path, cue.File.Type.WAVE));
       } else {
-        cueSheet.setFile(new cue.File(file.getText()));
+        cueSheet.setFile(new cue.File(path));
       }
     }
 

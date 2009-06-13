@@ -79,7 +79,7 @@ public class Chunk {
     StringBuffer str = new StringBuffer(identifier + " (" + length + "): ");
 
     if (data != null) {
-      str.append(data);
+      str.append(data.toString());
       str.append(" (" + data.length + ")");
     }
 

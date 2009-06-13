@@ -2,8 +2,6 @@ package cue;
 
 /**
  * 
- * @author johan
- * 
  */
 public class Flag {
   public static final Flag DCP = new Flag("DCP");
@@ -25,7 +23,7 @@ public class Flag {
 
   @Override
   public boolean equals(Object o) {
-    return flag.equals(o);
+    return flag.equals(o.toString());
   }
 
   @Override
